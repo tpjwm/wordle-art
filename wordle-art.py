@@ -8,6 +8,8 @@
 #⬛⬛⬛⬛⬛        
 
 import numpy as np
+from collections import Counter, defaultdict
+
 
 # Specify the path to your text file
 file_path = "words.txt"
@@ -21,38 +23,38 @@ words = np.array(words_list)
 input_word = input("Enter 5 letter word (or use wordle word by default): ")
 if input_word == "":
     #TODO: find today's wordle answer for default
-    input_word = "whisk"
+    input_word = "exert"
 
 # Validate
 if (len(input_word) != 5 or input_word not in words):
     print("Invalid word")
     exit()
 
-def word_match(word, target):
-    match_scores = ["⬛"] * len(word)
-    positions_matched = [False] * len(word)
+def compare_word(guess, solution):
+    matches = defaultdict(int)
+    colors = ["⬛"] * len(guess)
 
-    # First, find letters in the correct position
-    for i in range(len(word)):
-        if word[i] == target[i]:
-            match_scores[i] = "🟩"
-            positions_matched[i] = True
+    for index, (g, s) in enumerate(zip(guess, solution)):
+        if g == s:
+            colors[index] = "🟩"
+            # colors[index] = "🟨"
+            matches[g] += 1
+        elif g in solution:
+            colors[index] = "🟨"
 
-    # Then, find letters in the wrong position
-    for i in range(len(word)):
-        if not positions_matched[i]:
-            for j in range(len(target)):
-                if word[i] == target[j] and not positions_matched[j]:
-                    match_scores[i] = "🟨"
-                    positions_matched[j] = True
-                    break  # Break to avoid counting the same letter multiple times
+    if matches:
+        counts_in_solution = Counter(solution)
 
-    return match_scores
+        for index, (g, s) in enumerate(zip(guess, solution)):
+            if g != s and matches[g] == counts_in_solution[g]:
+                colors[index] = "⬛"
+
+    return colors
 
 pattern_to_words = {}
 for word in words:
     # print(f"{word}: {scores}")
-    pattern = word_match(word, input_word)
+    pattern = compare_word(word, input_word)
     pattern = tuple(pattern)
     if pattern in pattern_to_words:
         pattern_to_words[pattern].append(word)
